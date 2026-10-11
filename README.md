@@ -36,16 +36,18 @@ Cada produto poderá possuir informações como:
 - Nome;
 - Marca;
 - Categoria;
-- Preço de venda;
+- Preço de venda, quando aplicável (opcional);
 - SKU;
 - Quantidade em estoque;
-- Quantidade mínima para aviso de estoque baixo.
+- Quantidade mínima para aviso de estoque baixo, quando o alerta estiver configurado (opcional).
+- Data de criação.
 
 O SKU será utilizado como identificador único do produto, evitando o cadastro duplicado de um mesmo item.
 
 ### Categorias
 
 Os produtos poderão ser separados em categorias para facilitar sua organização e consulta.
+Cada produto deverá pertencer a uma única categoria.
 
 O sistema deve permitir:
 
@@ -76,13 +78,20 @@ Uma movimentação poderá representar:
 
 - Entrada de produtos;
 - Saída de produtos;
-- Estoque inicial informado no cadastro do produto.
+- A data em que ocorreu a movimentação.
 
+Caso um produto seja cadastrado com estoque inicial maior que zero,
+essa quantidade deverá gerar automaticamente uma movimentação de entrada.
+
+Cada movimentação deverá registrar o produto relacionado, o tipo da movimentação, a quantidade movimentada e a data em que a movimentação ocorreu.
 Isso permite manter um histórico das alterações realizadas e entender como a quantidade atual de um produto foi alcançada.
+
+
 
 ## Regras de negócio iniciais
 
 - Não deve ser permitido cadastrar dois produtos com o mesmo SKU;
+- Não deve ser permitido cadastrar duas categorias com o mesmo nome;
 - O estoque inicial de um produto pode ser igual a zero;
 - Caso um produto seja cadastrado com estoque inicial maior que zero, essa quantidade deverá ser registrada no histórico;
 - Entradas aumentam a quantidade disponível em estoque;
@@ -91,14 +100,50 @@ Isso permite manter um histórico das alterações realizadas e entender como a 
 - O estoque de um produto nunca pode ficar negativo;
 - Toda alteração de estoque deve gerar um registro no histórico;
 - A disponibilidade do produto pode ser determinada pela quantidade em estoque, sem necessidade de armazenar essa informação separadamente;
-- Produtos com quantidade menor ou igual ao limite mínimo definido deverão ser identificados como produtos com estoque baixo.
+- Caso o produto possua um limite mínimo definido, produtos com quantidade menor ou igual a esse limite deverão ser identificados como produtos com estoque baixo.
+- Ao excluir um produto, suas movimentações de estoque também deverão ser excluídas.
 
 ## Modelagem inicial
 
-As principais entidades identificadas até o momento são:
+As principais entidades do sistema são:
 
 - Produto;
 - Categoria;
 - Movimentação de Estoque.
 
-Os relacionamentos entre essas entidades serão definidos durante a etapa de modelagem do banco de dados e criação do DER.
+Os relacionamentos entre as entidades estão representados no DER abaixo:
+
+### Diagrama Entidade-Relacionamento
+
+```mermaid
+erDiagram
+    direction TB
+
+    CATEGORIA {
+        int id_categoria PK
+        string nome UK
+    }
+
+    PRODUTO {
+        int id_produto PK
+        string sku UK
+        string nome
+        string marca
+        int id_categoria FK
+        decimal preco_venda
+        int quantidade_estoque
+        int quantidade_minima
+        datetime data_criacao
+    }
+
+    MOVIMENTACAO_ESTOQUE {
+        int id_movimentacao PK
+        int id_produto FK
+        string tipo
+        int quantidade
+        datetime data_movimentacao
+    }
+
+    CATEGORIA ||--o{ PRODUTO : possui
+    PRODUTO ||--o{ MOVIMENTACAO_ESTOQUE : gera
+```
