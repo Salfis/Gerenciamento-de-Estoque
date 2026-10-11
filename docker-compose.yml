@@ -43,7 +43,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
 
-      ports:
+    ports:
       - "${PORT}:${PORT}"
 
 volumes:
