@@ -103,7 +103,7 @@ Isso permite manter um histórico das alterações realizadas e entender como a 
 - Caso o produto possua um limite mínimo definido, produtos com quantidade menor ou igual a esse limite deverão ser identificados como produtos com estoque baixo.
 - Ao excluir um produto, suas movimentações de estoque também deverão ser excluídas.
 
-## Modelagem inicial
+## Modelagem
 
 As principais entidades do sistema são:
 
@@ -147,3 +147,22 @@ erDiagram
     CATEGORIA ||--o{ PRODUTO : possui
     PRODUTO ||--o{ MOVIMENTACAO_ESTOQUE : gera
 ```
+
+## Executando o projeto
+
+### Requisitos
+
+- Docker
+- Docker Compose
+
+### Configuração
+
+Crie um arquivo `.env` baseado no `.env.example`.
+
+### Executando
+
+docker compose up --build -d
+
+A API estará disponível em:
+
+http://localhost:3000

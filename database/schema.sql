@@ -1,9 +1,5 @@
 USE estoque_db;
 
-DROP TABLE IF EXISTS movimentacao_estoque;
-DROP TABLE IF EXISTS produto;
-DROP TABLE IF EXISTS categoria;
-
 CREATE TABLE categoria (
     id_categoria INT PRIMARY KEY AUTO_INCREMENT,
     nome VARCHAR(100) NOT NULL UNIQUE
