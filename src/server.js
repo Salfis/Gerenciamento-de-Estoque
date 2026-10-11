@@ -1,4 +1,5 @@
 const express = require('express');
+const pool = require('./database');
 
 const app = express();
 
@@ -10,6 +11,21 @@ app.get('/health', (req,res) => {
     return res.status(200).json("API de estoque funcionando...");
 })
 
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-})
+async function iniciarServidor() {
+    try{
+        const connection = await pool.getConnection();
+
+        console.log('Conexão com o MySQL realizada com sucesso.');
+
+        connection.release();
+
+        app.listen(PORT, ()=>{
+            console.log(`API aberta na porta ${PORT}`);
+        });
+    } catch(error){
+        console.error('Erro ao conectar com o MySQL:');
+        console.error(error.message);
+    }
+}
+
+iniciarServidor();
