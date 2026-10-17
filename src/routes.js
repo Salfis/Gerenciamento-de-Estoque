@@ -3,7 +3,7 @@ const pool = require('./database');
 const { ListarCategorias, CriarCategorias, DeletarCategorias, EditarCategorias } = require("./controllers/categoria");
 const { CadastrarUsuario } = require("./controllers/usuarios");
 const { AutenticarUsuario, SomenteAdmin } = require("./middlewares/autenticar");
-const {LoginUsuario, EsqueciSenha } = require("./controllers/auth");
+const {LoginUsuario, EsqueciSenha, RedefinirSenha } = require("./controllers/auth");
 const { enviarEmail } = require('./services/email');
 
 const routes = Router();
@@ -45,6 +45,9 @@ routes.post('/usuario', CadastrarUsuario);
 routes.post('/login', LoginUsuario);
 
 //ESQUECI A SENHA
-routes.post('/redefinir-senha', EsqueciSenha);
+routes.post('/esqueci-senha', EsqueciSenha);
+
+//REDEFINIR A SENHA
+routes.post('/redefinir-senha', RedefinirSenha);
 
 module.exports = routes;
