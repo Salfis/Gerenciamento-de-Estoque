@@ -1,16 +1,15 @@
 const express = require('express');
 const pool = require('./database');
+const routes = require('./routes');
 
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use(routes);
 
-app.get('/', (req,res) => {
-    return res.status(200).json("API de estoque funcionando...");
-})
-
+//Essa função testa a conexão, se conseguir conectar, liga o servidor na porta definida;
 async function iniciarServidor() {
     try{
         const connection = await pool.getConnection();
