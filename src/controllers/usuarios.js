@@ -1,20 +1,22 @@
 const bcrypt = require('bcryptjs');
 const pool = require('../database');
 
+
 async function CadastrarUsuario(req,res){
     const {nome, email, senha, perfil } = req.body;
 
+    //verifica se estes campos foram fornecidos.
     if (!nome || !email || !senha){
         return res.status(400).json({erro: 'Todos os campos devem ser preenchidos...'});
     }
-
-
     
+    //valida se o perfil é válido. Se estiver vazio é definido como operador por padrão.
     const perfilFinal = perfil || 'OPERADOR';
     if(perfilFinal !== 'OPERADOR' && perfilFinal !== 'ADMIN'){
-        return res.status(400).json({erro: 'Tipo de usuário desconhecido...'});
+        return res.status(400).json({erro: 'Tipo de usuário inválido...'});
     }
 
+    //encriptando a senha.
     const senhaHash = await bcrypt.hash(senha, 10);
 
     try {
@@ -33,5 +35,6 @@ async function CadastrarUsuario(req,res){
         }
     }
 }
+
 
 module.exports = {CadastrarUsuario, };

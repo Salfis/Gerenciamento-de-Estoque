@@ -52,5 +52,8 @@ CREATE TABLE recuperacao_senha (
     token_hash CHAR(64) NOT NULL,
     expira_em DATETIME NOT NULL,
     usado BOOLEAN NOT NULL DEFAULT FALSE,
-    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
+
+    FOREIGN KEY (id_usuario) 
+        REFERENCES usuario(id_usuario) 
+        ON DELETE CASCADE
 );

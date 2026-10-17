@@ -2,6 +2,7 @@ const Router = require("express");
 const pool = require('./database');
 const { ListarCategorias, CriarCategorias, DeletarCategorias, EditarCategorias } = require("./controllers/categoria");
 const { CadastrarUsuario } = require("./controllers/usuarios");
+const LoginUsuario = require("./controllers/auth");
 
 const routes = Router();
 
@@ -37,5 +38,8 @@ routes.put('/categorias/:id', EditarCategorias);
 
 //CADASTRAR USUARIO
 routes.post('/usuario', CadastrarUsuario);
+
+//LOGIN USUARIO
+routes.post('/login', LoginUsuario);
 
 module.exports = routes;
