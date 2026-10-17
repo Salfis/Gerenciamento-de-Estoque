@@ -2,7 +2,7 @@ const Router = require("express");
 const pool = require('./database');
 const { ListarCategorias, CriarCategorias, DeletarCategorias, EditarCategorias } = require("./controllers/categoria");
 const { CadastrarUsuario } = require("./controllers/usuarios");
-const { AutenticarUsuario } = require("./middlewares/autenticar");
+const { AutenticarUsuario, SomenteAdmin } = require("./middlewares/autenticar");
 const LoginUsuario = require("./controllers/auth");
 
 const routes = Router();
@@ -22,15 +22,15 @@ routes.get('/', (req,res) => {
 routes.get('/categorias', AutenticarUsuario ,ListarCategorias);
 
 //CRIAR CATEGORIAS
-routes.post('/categorias', AutenticarUsuario ,CriarCategorias);
+routes.post('/categorias', AutenticarUsuario, SomenteAdmin ,CriarCategorias);
 
 
 //DELETAR CATEGORIA
-routes.delete('/categorias/:id', AutenticarUsuario ,DeletarCategorias);
+routes.delete('/categorias/:id', AutenticarUsuario, SomenteAdmin ,DeletarCategorias);
 
 
 // EDITAR CATEGORIA
-routes.put('/categorias/:id', AutenticarUsuario ,EditarCategorias);
+routes.put('/categorias/:id', AutenticarUsuario, SomenteAdmin ,EditarCategorias);
 
 
 /*///////////////////////

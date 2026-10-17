@@ -1,5 +1,7 @@
 const pool = require('../database');
 
+//Código sem comentários, apenas CRUD padrão das categorias.
+
 async function ListarCategorias(req, res){
     const [categorias] = await pool.query('SELECT * FROM categoria');
     return res.status(200).json(categorias);

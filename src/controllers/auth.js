@@ -11,19 +11,20 @@ async function LoginUsuario(req,res){
     }
     
     try{
-
+        //verifico se usuario existe e salvo em uma variável caso ele exista.
         const [usuarios] = await pool.query('SELECT * FROM usuario WHERE email = ?', [email]);
         const usuario = usuarios[0];
         if(!usuario){
             return res.status(401).json({erro: 'E-mail ou senha inválidos.'});
         }
 
+        //verifico se a senha está correta.
         const senhaCorreta = await bcrypt.compare(senha, usuario.senha_hash);
         if(!senhaCorreta){
             return res.status(401).json({erro: 'E-mail ou senha inválidos.'});
         }
 
-    
+        //gero um token para mandar pro usuário.
         const token = jwt.sign(
                 {id: usuario.id_usuario, perfil: usuario.perfil},
                 process.env.JWT_SECRET,
