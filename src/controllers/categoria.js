@@ -23,7 +23,7 @@ async function CriarCategorias(req,res){
             return res.status(409).json({erro: 'Nomes duplicados não são permitidos'});
         } else{
             console.log(erro);
-            res.status(500).json({erro: 'Erro interno na criação da categoria'});
+            return res.status(500).json({erro: 'Erro interno na criação da categoria'});
         }
     }
     
@@ -70,7 +70,7 @@ async function EditarCategorias(req,res){
             return res.status(409).json({erro: 'Nomes duplicados não são permitidos'});
         } else{
             console.log(erro);
-            res.status(500).json({erro: 'Erro interno na edição da categoria'});
+            return res.status(500).json({erro: 'Erro interno na edição da categoria'});
         }
     }
 }
