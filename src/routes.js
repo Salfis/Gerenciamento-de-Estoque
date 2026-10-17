@@ -4,6 +4,7 @@ const { ListarCategorias, CriarCategorias, DeletarCategorias, EditarCategorias }
 const { CadastrarUsuario } = require("./controllers/usuarios");
 const { AutenticarUsuario, SomenteAdmin } = require("./middlewares/autenticar");
 const LoginUsuario = require("./controllers/auth");
+const { enviarEmail } = require('./services/email');
 
 const routes = Router();
 
