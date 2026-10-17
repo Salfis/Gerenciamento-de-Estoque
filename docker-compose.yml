@@ -23,6 +23,14 @@ services:
       timeout: 5s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit
+    container_name: estoque_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
   api:
     build: .
     container_name: estoque_api
@@ -33,6 +41,11 @@ services:
         condition: service_healthy
 
     environment:
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+
+      JWT_SECRET: ${JWT_SECRET}
+    
       PORT: ${PORT}
 
 
