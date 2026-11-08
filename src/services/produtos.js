@@ -2,11 +2,16 @@ const { transacao } = require('../database');
 const produtoRepository = require('../repositories/produtos');
 const categoriaRepository = require('../repositories/categoria');
 const movimentacaoRepository = require('../repositories/movimentacoes');
+const openFoodFacts = require('./openFoodFacts');
 const { ErroConflito, ErroNaoEncontrado, ErroValidacao } = require('./erros');
 const validar = require('./validacao');
 
-const CAMPOS_EDITAVEIS = ['sku', 'nome', 'marca', 'id_categoria', 'preco_venda', 'quantidade_minima'];
+const CAMPOS_EDITAVEIS = ['sku', 'codigo_barras', 'nome', 'marca', 'id_categoria', 'preco_venda', 'quantidade_minima'];
 
+/**
+ * A disponibilidade e o alerta de estoque baixo não são armazenados no banco:
+ * são calculados a partir da quantidade atual, evitando informações duplicadas ou desatualizadas.
+ */
 function comSituacao(produto) {
     return {
         ...produto,
@@ -21,6 +26,8 @@ function validarCampo(campo, valor) {
         case 'nome':
         case 'marca':
             return validar.texto(valor, campo);
+        case 'codigo_barras':
+            return validar.codigoBarras(valor, campo, { obrigatorio: false });
         case 'id_categoria':
             return validar.inteiro(valor, campo, { min: 1 });
         case 'preco_venda':
@@ -40,6 +47,16 @@ async function garantirSkuDisponivel(sku, idAtual = null) {
     const existente = await produtoRepository.buscarPorSku(sku);
     if (existente && existente.id_produto !== idAtual) {
         throw new ErroConflito('Já existe um produto com esse SKU');
+    }
+}
+
+async function garantirCodigoBarrasDisponivel(codigoBarras, idAtual = null) {
+    if (!codigoBarras) {
+        return;
+    }
+    const existente = await produtoRepository.buscarPorCodigoBarras(codigoBarras);
+    if (existente && existente.id_produto !== idAtual) {
+        throw new ErroConflito('Já existe um produto com esse código de barras', { id_produto: existente.id_produto });
     }
 }
 
@@ -76,7 +93,10 @@ async function criar(dados = {}, idUsuario) {
 
     await garantirCategoria(produto.id_categoria);
     await garantirSkuDisponivel(produto.sku);
+    await garantirCodigoBarrasDisponivel(produto.codigo_barras);
 
+    // O cadastro do produto e o registro do estoque inicial ocorrem na mesma transação,
+    // garantindo que toda quantidade em estoque possua uma movimentação correspondente.
     const idProduto = await transacao(async (conexao) => {
         const id = await produtoRepository.criar(produto, conexao);
         if (produto.quantidade_estoque > 0) {
@@ -117,6 +137,9 @@ async function atualizar(idProduto, dados = {}) {
     if (campos.sku !== undefined) {
         await garantirSkuDisponivel(campos.sku, produto.id_produto);
     }
+    if (campos.codigo_barras !== undefined) {
+        await garantirCodigoBarrasDisponivel(campos.codigo_barras, produto.id_produto);
+    }
 
     await produtoRepository.atualizar(produto.id_produto, campos);
     return buscar(produto.id_produto);
@@ -127,4 +150,37 @@ async function excluir(idProduto) {
     await produtoRepository.excluir(produto.id_produto);
 }
 
-module.exports = { listar, buscar, criar, atualizar, excluir, buscarExistente };
+async function consultarCodigoBarras(codigo) {
+    const codigoBarras = validar.codigoBarras(codigo);
+    const externo = await openFoodFacts.buscarProdutoPorCodigo(codigoBarras);
+    if (!externo) {
+        throw new ErroNaoEncontrado('Produto não encontrado na Open Food Facts');
+    }
+    const local = await produtoRepository.buscarPorCodigoBarras(codigoBarras);
+    return { ...externo, ja_cadastrado: Boolean(local), id_produto: local?.id_produto ?? null };
+}
+
+/**
+ * Cadastra um produto a partir do código de barras: nome e marca são obtidos da Open Food Facts
+ * e podem ser sobrescritos pelos campos enviados. Se o SKU não for informado, o próprio código
+ * de barras é utilizado. As demais regras do cadastro manual continuam valendo.
+ */
+async function importar(dados = {}, idUsuario) {
+    const codigoBarras = validar.codigoBarras(dados.codigo_barras);
+    await garantirCodigoBarrasDisponivel(codigoBarras);
+
+    const externo = await openFoodFacts.buscarProdutoPorCodigo(codigoBarras);
+    if (!externo) {
+        throw new ErroNaoEncontrado('Produto não encontrado na Open Food Facts. Cadastre manualmente em POST /produtos');
+    }
+
+    const nome = dados.nome ?? externo.nome;
+    const marca = dados.marca ?? externo.marca;
+    if (!nome || !marca) {
+        throw new ErroValidacao('A Open Food Facts não informou nome ou marca desse produto. Envie os campos nome e marca');
+    }
+
+    return criar({ ...dados, codigo_barras: codigoBarras, sku: dados.sku ?? codigoBarras, nome, marca }, idUsuario);
+}
+
+module.exports = { listar, buscar, criar, atualizar, excluir, buscarExistente, consultarCodigoBarras, importar };

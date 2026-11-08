@@ -25,4 +25,22 @@ async function DeletarProduto(req, res) {
     return res.status(204).send();
 }
 
-module.exports = { ListarProdutos, BuscarProduto, AdicionarProdutos, EditarProduto, DeletarProduto };
+async function ConsultarCodigoBarras(req, res) {
+    const produto = await produtoService.consultarCodigoBarras(req.params.codigo);
+    return res.status(200).json(produto);
+}
+
+async function ImportarProduto(req, res) {
+    const produto = await produtoService.importar(req.body, req.usuario.id);
+    return res.status(201).json(produto);
+}
+
+module.exports = {
+    ListarProdutos,
+    BuscarProduto,
+    AdicionarProdutos,
+    EditarProduto,
+    DeletarProduto,
+    ConsultarCodigoBarras,
+    ImportarProduto,
+};

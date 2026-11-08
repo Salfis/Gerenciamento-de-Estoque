@@ -23,12 +23,16 @@ async function registrar(dados = {}, idUsuario) {
     const quantidade = validar.inteiro(dados.quantidade, 'quantidade', { min: 1 });
     const observacao = validar.texto(dados.observacao, 'observacao', { obrigatorio: false, max: 255 });
 
+    // A leitura do produto usa SELECT ... FOR UPDATE dentro da transação, bloqueando a linha
+    // até o commit. Isso impede que duas saídas simultâneas leiam o mesmo saldo e deixem o estoque negativo.
     return transacao(async (conexao) => {
         const produto = await produtoRepository.buscarParaMovimentar(id_produto, conexao);
         if (!produto) {
             throw new ErroNaoEncontrado('Produto não encontrado');
         }
 
+        // Regra de negócio: uma saída nunca pode ser maior que o saldo atual.
+        // A resposta informa a quantidade máxima disponível para orientar o usuário.
         if (tipo === 'SAIDA' && quantidade > produto.quantidade_estoque) {
             throw new ErroConflito(
                 `Estoque insuficiente. A quantidade máxima disponível para saída é ${produto.quantidade_estoque}`,
