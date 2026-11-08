@@ -1,7 +1,29 @@
+CREATE TABLE usuario (
+    id_usuario INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil ENUM('ADMIN', 'OPERADOR') NOT NULL DEFAULT 'OPERADOR',
+    data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE recuperacao_senha (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    expira_em DATETIME NOT NULL,
+    usado BOOLEAN NOT NULL DEFAULT FALSE,
+
+    FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario)
+        ON DELETE CASCADE
+);
+
 CREATE TABLE categoria (
     id_categoria INT PRIMARY KEY AUTO_INCREMENT,
     nome VARCHAR(100) NOT NULL UNIQUE
 );
+
 CREATE TABLE produto (
     id_produto INT PRIMARY KEY AUTO_INCREMENT,
     sku VARCHAR(100) NOT NULL UNIQUE,
@@ -21,37 +43,23 @@ CREATE TABLE produto (
     CHECK (quantidade_estoque >= 0),
     CHECK (quantidade_minima IS NULL OR quantidade_minima >= 0)
 );
+
 CREATE TABLE movimentacao_estoque (
     id_movimentacao INT PRIMARY KEY AUTO_INCREMENT,
     id_produto INT NOT NULL,
+    id_usuario INT NOT NULL,
     tipo ENUM('ENTRADA', 'SAIDA') NOT NULL,
     quantidade INT NOT NULL,
+    observacao VARCHAR(255) NULL,
     data_movimentacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (id_produto)
         REFERENCES produto(id_produto)
         ON DELETE CASCADE,
 
+    FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario)
+        ON DELETE RESTRICT,
+
     CHECK (quantidade > 0)
-);
-
-CREATE TABLE usuario (
-    id_usuario INT PRIMARY KEY AUTO_INCREMENT,
-    nome VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    senha_hash VARCHAR(255) NOT NULL,
-    perfil ENUM('ADMIN', 'OPERADOR') NOT NULL DEFAULT 'OPERADOR',
-    data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE recuperacao_senha (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    id_usuario INT NOT NULL,
-    token_hash CHAR(64) NOT NULL,
-    expira_em DATETIME NOT NULL,
-    usado BOOLEAN NOT NULL DEFAULT FALSE,
-
-    FOREIGN KEY (id_usuario) 
-        REFERENCES usuario(id_usuario) 
-        ON DELETE CASCADE
 );
