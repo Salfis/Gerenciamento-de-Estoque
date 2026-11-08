@@ -8,6 +8,22 @@ const pool = mysql.createPool({
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
-})
+    decimalNumbers: true,
+});
 
-module.exports = pool;
+async function transacao(funcao) {
+    const conexao = await pool.getConnection();
+    try {
+        await conexao.beginTransaction();
+        const resultado = await funcao(conexao);
+        await conexao.commit();
+        return resultado;
+    } catch (erro) {
+        await conexao.rollback();
+        throw erro;
+    } finally {
+        conexao.release();
+    }
+}
+
+module.exports = { pool, transacao };

@@ -1,5 +1,5 @@
 const express = require('express');
-const pool = require('./database');
+const { pool } = require('./database');
 const routes = require('./routes');
 const { RotaNaoEncontrada, TratarErros } = require('./middlewares/tratarErros');
 
