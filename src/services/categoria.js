@@ -46,4 +46,8 @@ async function excluir(idCategoria) {
     await categoriaRepository.excluir(categoria.id_categoria);
 }
 
-module.exports = { listar, criar, atualizar, excluir };
+async function buscar(idCategoria) {
+    return buscarExistente(idCategoria);
+}
+
+module.exports = { listar, buscar, criar, atualizar, excluir };
