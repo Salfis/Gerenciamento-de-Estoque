@@ -1,5 +1,3 @@
-USE estoque_db;
-
 CREATE TABLE categoria (
     id_categoria INT PRIMARY KEY AUTO_INCREMENT,
     nome VARCHAR(100) NOT NULL UNIQUE

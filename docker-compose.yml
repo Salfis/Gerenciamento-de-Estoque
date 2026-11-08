@@ -10,54 +10,53 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
 
-    ports:
-      - "3306:3306"
-
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
 
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 30s
 
   mailpit:
-    image: axllent/mailpit
+    image: axllent/mailpit:v1.32.0
     container_name: estoque_mailpit
     restart: unless-stopped
+
     ports:
       - "8025:8025"
-      - "1025:1025"
 
   api:
     build: .
     container_name: estoque_api
     restart: unless-stopped
+    init: true
 
     depends_on:
       mysql:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
     environment:
-      SMTP_HOST: mailpit
-      SMTP_PORT: 1025
-
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
       JWT_SECRET: ${JWT_SECRET}
-    
-      PORT: ${PORT}
-
 
       DB_HOST: mysql
       DB_PORT: 3306
-
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
 
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+
     ports:
-      - "${PORT}:${PORT}"
+      - "${PORT:-3000}:${PORT:-3000}"
 
 volumes:
   mysql_data:
