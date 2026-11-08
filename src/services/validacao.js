@@ -82,4 +82,17 @@ function id(valor, campo = 'id') {
     return numero;
 }
 
-module.exports = { texto, email, senha, inteiro, decimal, id };
+function booleano(valor, campo) {
+    if (valor === undefined) {
+        return null;
+    }
+    if (valor === 'true' || valor === true) {
+        return true;
+    }
+    if (valor === 'false' || valor === false) {
+        return false;
+    }
+    throw new ErroValidacao(`O campo ${campo} deve ser true ou false`);
+}
+
+module.exports = { texto, email, senha, inteiro, decimal, id, booleano };
