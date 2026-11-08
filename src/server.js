@@ -1,6 +1,8 @@
 const express = require('express');
+const helmet = require('helmet');
 const { pool } = require('./database');
 const routes = require('./routes');
+const { criarAdminInicial } = require('./services/usuarios');
 const { RotaNaoEncontrada, TratarErros } = require('./middlewares/tratarErros');
 
 const app = express();
@@ -8,6 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const TENTATIVAS_CONEXAO = 10;
 
+app.use(helmet());
 app.use(express.json());
 app.use(routes);
 app.use(RotaNaoEncontrada);
@@ -43,11 +46,13 @@ async function iniciarServidor() {
         await conectarBanco();
         console.log('Conexão com o MySQL realizada com sucesso.');
 
+        await criarAdminInicial();
+
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`API aberta na porta ${PORT}`);
         });
-    } catch {
-        console.error('Não foi possível conectar ao MySQL. Encerrando.');
+    } catch (error) {
+        console.error('Não foi possível iniciar a API:', error.message);
         process.exit(1);
     }
 }
