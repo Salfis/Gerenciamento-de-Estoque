@@ -5,6 +5,7 @@ const { CadastrarUsuario } = require("./controllers/usuarios");
 const { AutenticarUsuario, SomenteAdmin } = require("./middlewares/autenticar");
 const {LoginUsuario, EsqueciSenha, RedefinirSenha } = require("./controllers/auth");
 const { enviarEmail } = require('./services/email');
+const { ListarProdutos, AdicionarProdutos } = require("./controllers/produtos");
 
 const routes = Router();
 
@@ -35,7 +36,7 @@ routes.put('/categorias/:id', AutenticarUsuario, SomenteAdmin ,EditarCategorias)
 
 
 /*///////////////////////
-    CRUD DO USUARIO
+    ENDPOINTS DO USUARIO
 ///////////////////////*/
 
 //CADASTRAR USUARIO
@@ -51,3 +52,13 @@ routes.post('/esqueci-senha', EsqueciSenha);
 routes.post('/redefinir-senha', RedefinirSenha);
 
 module.exports = routes;
+
+/*///////////////////////
+    CRUD DE PRODUTO
+///////////////////////*/
+
+//LISTAR PRODUTOS
+routes.get('/produtos', ListarProdutos);
+
+//CRIAR PRODUTOS
+routes.post('/produtos', AdicionarProdutos);
