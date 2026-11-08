@@ -1,64 +1,27 @@
-const Router = require("express");
-const pool = require('./database');
-const { ListarCategorias, CriarCategorias, DeletarCategorias, EditarCategorias } = require("./controllers/categoria");
-const { CadastrarUsuario } = require("./controllers/usuarios");
-const { AutenticarUsuario, SomenteAdmin } = require("./middlewares/autenticar");
-const {LoginUsuario, EsqueciSenha, RedefinirSenha } = require("./controllers/auth");
-const { enviarEmail } = require('./services/email');
-const { ListarProdutos, AdicionarProdutos } = require("./controllers/produtos");
+const { Router } = require('express');
+const { ListarCategorias, CriarCategorias, DeletarCategorias, EditarCategorias } = require('./controllers/categoria');
+const { CadastrarUsuario } = require('./controllers/usuarios');
+const { LoginUsuario, EsqueciSenha, RedefinirSenha } = require('./controllers/auth');
+const { ListarProdutos, AdicionarProdutos } = require('./controllers/produtos');
+const { AutenticarUsuario, SomenteAdmin } = require('./middlewares/autenticar');
 
 const routes = Router();
 
+routes.get('/', (req, res) => {
+    return res.status(200).json('API de estoque funcionando...');
+});
 
+routes.get('/categorias', AutenticarUsuario, ListarCategorias);
+routes.post('/categorias', AutenticarUsuario, SomenteAdmin, CriarCategorias);
+routes.delete('/categorias/:id', AutenticarUsuario, SomenteAdmin, DeletarCategorias);
+routes.put('/categorias/:id', AutenticarUsuario, SomenteAdmin, EditarCategorias);
 
-//=CHECKAGEM DO SERVIDOR
-routes.get('/', (req,res) => {
-    return res.status(200).json("API de estoque funcionando...");
-})
-
-/*///////////////////////
-    CRUD DAS CATEGORIAS
-///////////////////////*/
-
-//LISTAR AS CATEGORIAS
-routes.get('/categorias', AutenticarUsuario ,ListarCategorias);
-
-//CRIAR CATEGORIAS
-routes.post('/categorias', AutenticarUsuario, SomenteAdmin ,CriarCategorias);
-
-
-//DELETAR CATEGORIA
-routes.delete('/categorias/:id', AutenticarUsuario, SomenteAdmin ,DeletarCategorias);
-
-
-// EDITAR CATEGORIA
-routes.put('/categorias/:id', AutenticarUsuario, SomenteAdmin ,EditarCategorias);
-
-
-/*///////////////////////
-    ENDPOINTS DO USUARIO
-///////////////////////*/
-
-//CADASTRAR USUARIO
 routes.post('/usuario', CadastrarUsuario);
-
-//LOGIN USUARIO
 routes.post('/login', LoginUsuario);
-
-//ESQUECI A SENHA
 routes.post('/esqueci-senha', EsqueciSenha);
-
-//REDEFINIR A SENHA
 routes.post('/redefinir-senha', RedefinirSenha);
 
-module.exports = routes;
-
-/*///////////////////////
-    CRUD DE PRODUTO
-///////////////////////*/
-
-//LISTAR PRODUTOS
 routes.get('/produtos', ListarProdutos);
-
-//CRIAR PRODUTOS
 routes.post('/produtos', AdicionarProdutos);
+
+module.exports = routes;

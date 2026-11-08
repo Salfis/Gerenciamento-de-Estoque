@@ -1,34 +1,20 @@
-const jwt = require('jsonwebtoken');
+const { validarToken } = require('../services/auth');
+const { ErroNaoAutenticado, ErroProibido } = require('../services/erros');
 
-
-//Função feita para autenticação de tokens de usuario.
-function AutenticarUsuario(req, res, next){
-
-    const header = req.headers.authorization;
-    if(!header){
-        return res.status(401).json({erro: 'Token não informado...'});
+function AutenticarUsuario(req, res, next) {
+    const [tipo, token] = (req.headers.authorization || '').split(' ');
+    if (tipo !== 'Bearer' || !token) {
+        throw new ErroNaoAutenticado('Token não informado');
     }
-
-    const partes = header.split(' ');
-    const token = partes[1];
-
-    try{
-        const dados = jwt.verify(token, process.env.JWT_SECRET);
-        req.usuario = dados;
-
-    } catch(erro){
-        return res.status(401).json({erro: 'Token inválido ou expirado...'});
-    }  
-
+    req.usuario = validarToken(token);
     next();
-} 
+}
 
-//Função feita para controlar restringir o acesso aos administradores.
-function SomenteAdmin(req, res, next){
-    if(req.usuario.perfil !== 'ADMIN'){
-        return res.status(403).json({erro: 'Sem autorização para realizar essa ação'});
+function SomenteAdmin(req, res, next) {
+    if (req.usuario.perfil !== 'ADMIN') {
+        throw new ErroProibido('Sem autorização para realizar essa ação');
     }
     next();
 }
 
-module.exports = {AutenticarUsuario, SomenteAdmin};
+module.exports = { AutenticarUsuario, SomenteAdmin };
