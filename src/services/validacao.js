@@ -35,12 +35,15 @@ function email(valor, campo = 'email') {
     return limpo.toLowerCase();
 }
 
-function senha(valor, campo = 'senha') {
+function senha(valor, campo = 'senha', { min = 1 } = {}) {
     if (estaVazio(valor)) {
         throw new ErroValidacao(`O campo ${campo} é obrigatório`);
     }
     if (typeof valor !== 'string') {
         throw new ErroValidacao(`O campo ${campo} deve ser um texto`);
+    }
+    if (valor.length < min) {
+        throw new ErroValidacao(`O campo ${campo} deve ter no mínimo ${min} caracteres`);
     }
     if (valor.length > 72) {
         throw new ErroValidacao(`O campo ${campo} deve ter no máximo 72 caracteres`);
@@ -95,4 +98,17 @@ function booleano(valor, campo) {
     throw new ErroValidacao(`O campo ${campo} deve ser true ou false`);
 }
 
-module.exports = { texto, email, senha, inteiro, decimal, id, booleano };
+function codigoBarras(valor, campo = 'codigo_barras', { obrigatorio = true } = {}) {
+    if (valor === undefined || valor === null) {
+        if (obrigatorio) {
+            throw new ErroValidacao(`O campo ${campo} é obrigatório`);
+        }
+        return null;
+    }
+    if (typeof valor !== 'string' || !/^\d{8,14}$/.test(valor)) {
+        throw new ErroValidacao(`O campo ${campo} deve ser um texto com 8 a 14 dígitos`);
+    }
+    return valor;
+}
+
+module.exports = { texto, email, senha, inteiro, decimal, id, booleano, codigoBarras };
