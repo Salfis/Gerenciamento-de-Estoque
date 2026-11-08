@@ -1,32 +1,130 @@
+const { transacao } = require('../database');
 const produtoRepository = require('../repositories/produtos');
 const categoriaRepository = require('../repositories/categoria');
-const { ErroConflito, ErroNaoEncontrado } = require('./erros');
+const movimentacaoRepository = require('../repositories/movimentacoes');
+const { ErroConflito, ErroNaoEncontrado, ErroValidacao } = require('./erros');
 const validar = require('./validacao');
 
-async function listar() {
-    return produtoRepository.listar();
+const CAMPOS_EDITAVEIS = ['sku', 'nome', 'marca', 'id_categoria', 'preco_venda', 'quantidade_minima'];
+
+function comSituacao(produto) {
+    return {
+        ...produto,
+        disponivel: produto.quantidade_estoque > 0,
+        estoque_baixo: produto.quantidade_minima !== null && produto.quantidade_estoque <= produto.quantidade_minima,
+    };
 }
 
-async function criar(dados = {}) {
-    const produto = {
-        sku: validar.texto(dados.sku, 'sku'),
-        nome: validar.texto(dados.nome, 'nome'),
-        marca: validar.texto(dados.marca, 'marca'),
-        id_categoria: validar.inteiro(dados.id_categoria, 'id_categoria', { min: 1 }),
-        preco_venda: validar.decimal(dados.preco_venda, 'preco_venda', { obrigatorio: false }),
-        quantidade_estoque: validar.inteiro(dados.quantidade_estoque, 'quantidade_estoque', { obrigatorio: false }) ?? 0,
-        quantidade_minima: validar.inteiro(dados.quantidade_minima, 'quantidade_minima', { obrigatorio: false }),
-    };
+function validarCampo(campo, valor) {
+    switch (campo) {
+        case 'sku':
+        case 'nome':
+        case 'marca':
+            return validar.texto(valor, campo);
+        case 'id_categoria':
+            return validar.inteiro(valor, campo, { min: 1 });
+        case 'preco_venda':
+            return validar.decimal(valor, campo, { obrigatorio: false });
+        case 'quantidade_minima':
+            return validar.inteiro(valor, campo, { obrigatorio: false });
+    }
+}
 
-    if (!(await categoriaRepository.buscarPorId(produto.id_categoria))) {
+async function garantirCategoria(idCategoria) {
+    if (!(await categoriaRepository.buscarPorId(idCategoria))) {
         throw new ErroNaoEncontrado('Categoria não encontrada');
     }
-    if (await produtoRepository.buscarPorSku(produto.sku)) {
-        throw new ErroConflito('Já existe um produto com esse SKU');
-    }
-
-    const id_produto = await produtoRepository.criar(produto);
-    return { id_produto, ...produto };
 }
 
-module.exports = { listar, criar };
+async function garantirSkuDisponivel(sku, idAtual = null) {
+    const existente = await produtoRepository.buscarPorSku(sku);
+    if (existente && existente.id_produto !== idAtual) {
+        throw new ErroConflito('Já existe um produto com esse SKU');
+    }
+}
+
+async function buscarExistente(idProduto) {
+    const id = validar.id(idProduto);
+    const produto = await produtoRepository.buscarPorId(id);
+    if (!produto) {
+        throw new ErroNaoEncontrado('Produto não encontrado');
+    }
+    return produto;
+}
+
+async function listar(query = {}) {
+    const filtros = {
+        busca: validar.texto(query.busca, 'busca', { obrigatorio: false }),
+        id_categoria: query.id_categoria === undefined ? null : validar.id(query.id_categoria, 'id_categoria'),
+        disponivel: validar.booleano(query.disponivel, 'disponivel'),
+        estoque_baixo: validar.booleano(query.estoque_baixo, 'estoque_baixo'),
+    };
+    const produtos = await produtoRepository.listar(filtros);
+    return produtos.map(comSituacao);
+}
+
+async function buscar(idProduto) {
+    return comSituacao(await buscarExistente(idProduto));
+}
+
+async function criar(dados = {}, idUsuario) {
+    const produto = {};
+    for (const campo of CAMPOS_EDITAVEIS) {
+        produto[campo] = validarCampo(campo, dados[campo]);
+    }
+    produto.quantidade_estoque = validar.inteiro(dados.quantidade_estoque, 'quantidade_estoque', { obrigatorio: false }) ?? 0;
+
+    await garantirCategoria(produto.id_categoria);
+    await garantirSkuDisponivel(produto.sku);
+
+    const idProduto = await transacao(async (conexao) => {
+        const id = await produtoRepository.criar(produto, conexao);
+        if (produto.quantidade_estoque > 0) {
+            await movimentacaoRepository.criar({
+                id_produto: id,
+                id_usuario: idUsuario,
+                tipo: 'ENTRADA',
+                quantidade: produto.quantidade_estoque,
+                observacao: 'Estoque inicial',
+            }, conexao);
+        }
+        return id;
+    });
+
+    return buscar(idProduto);
+}
+
+async function atualizar(idProduto, dados = {}) {
+    const produto = await buscarExistente(idProduto);
+
+    if (dados.quantidade_estoque !== undefined) {
+        throw new ErroValidacao('O estoque só pode ser alterado por movimentações (POST /movimentacoes)');
+    }
+
+    const campos = {};
+    for (const campo of CAMPOS_EDITAVEIS) {
+        if (dados[campo] !== undefined) {
+            campos[campo] = validarCampo(campo, dados[campo]);
+        }
+    }
+    if (Object.keys(campos).length === 0) {
+        throw new ErroValidacao(`Informe ao menos um campo para atualizar: ${CAMPOS_EDITAVEIS.join(', ')}`);
+    }
+
+    if (campos.id_categoria !== undefined) {
+        await garantirCategoria(campos.id_categoria);
+    }
+    if (campos.sku !== undefined) {
+        await garantirSkuDisponivel(campos.sku, produto.id_produto);
+    }
+
+    await produtoRepository.atualizar(produto.id_produto, campos);
+    return buscar(produto.id_produto);
+}
+
+async function excluir(idProduto) {
+    const produto = await buscarExistente(idProduto);
+    await produtoRepository.excluir(produto.id_produto);
+}
+
+module.exports = { listar, buscar, criar, atualizar, excluir, buscarExistente };

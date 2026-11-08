@@ -1,4 +1,4 @@
-const pool = require('../database');
+const { pool } = require('../database');
 
 async function criar(idUsuario, tokenHash) {
     await pool.query(

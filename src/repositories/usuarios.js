@@ -1,4 +1,4 @@
-const pool = require('../database');
+const { pool } = require('../database');
 
 async function buscarPorEmail(email) {
     const [usuarios] = await pool.query('SELECT * FROM usuario WHERE email = ?', [email]);

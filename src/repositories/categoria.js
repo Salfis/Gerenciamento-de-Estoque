@@ -1,4 +1,4 @@
-const pool = require('../database');
+const { pool } = require('../database');
 
 async function listar() {
     const [categorias] = await pool.query('SELECT id_categoria, nome FROM categoria ORDER BY nome');
@@ -14,7 +14,7 @@ async function buscarPorNome(nome) {
     const [categorias] = await pool.query('SELECT id_categoria, nome FROM categoria WHERE nome = ?', [nome]);
     return categorias[0] ?? null;
 }
-z
+
 async function criar(nome) {
     const [resultado] = await pool.query('INSERT INTO categoria (nome) VALUES (?)', [nome]);
     return resultado.insertId;

@@ -5,6 +5,11 @@ async function ListarCategorias(req, res) {
     return res.status(200).json(categorias);
 }
 
+async function BuscarCategoria(req, res) {
+    const categoria = await categoriaService.buscar(req.params.id);
+    return res.status(200).json(categoria);
+}
+
 async function CriarCategorias(req, res) {
     const categoria = await categoriaService.criar(req.body);
     return res.status(201).json(categoria);
@@ -20,4 +25,4 @@ async function EditarCategorias(req, res) {
     return res.status(200).json(categoria);
 }
 
-module.exports = { ListarCategorias, CriarCategorias, DeletarCategorias, EditarCategorias };
+module.exports = { ListarCategorias, BuscarCategoria, CriarCategorias, DeletarCategorias, EditarCategorias };
