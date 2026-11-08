@@ -36,4 +36,18 @@ class ErroConflito extends ErroApp {
     }
 }
 
-module.exports = { ErroApp, ErroValidacao, ErroNaoAutenticado, ErroProibido, ErroNaoEncontrado, ErroConflito };
+class ErroServicoExterno extends ErroApp {
+    constructor(mensagem) {
+        super(mensagem, 503);
+    }
+}
+
+module.exports = {
+    ErroApp,
+    ErroValidacao,
+    ErroNaoAutenticado,
+    ErroProibido,
+    ErroNaoEncontrado,
+    ErroConflito,
+    ErroServicoExterno,
+};

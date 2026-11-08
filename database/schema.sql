@@ -4,13 +4,15 @@ CREATE TABLE usuario (
     email VARCHAR(150) NOT NULL UNIQUE,
     senha_hash VARCHAR(255) NOT NULL,
     perfil ENUM('ADMIN', 'OPERADOR') NOT NULL DEFAULT 'OPERADOR',
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    token_versao INT NOT NULL DEFAULT 0,
     data_criacao DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE recuperacao_senha (
     id INT PRIMARY KEY AUTO_INCREMENT,
     id_usuario INT NOT NULL,
-    token_hash CHAR(64) NOT NULL,
+    token_hash CHAR(64) NOT NULL UNIQUE,
     expira_em DATETIME NOT NULL,
     usado BOOLEAN NOT NULL DEFAULT FALSE,
 
@@ -27,6 +29,7 @@ CREATE TABLE categoria (
 CREATE TABLE produto (
     id_produto INT PRIMARY KEY AUTO_INCREMENT,
     sku VARCHAR(100) NOT NULL UNIQUE,
+    codigo_barras VARCHAR(14) NULL UNIQUE,
     nome VARCHAR(100) NOT NULL,
     marca VARCHAR(100) NOT NULL,
     id_categoria INT NOT NULL,

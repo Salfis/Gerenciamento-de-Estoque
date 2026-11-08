@@ -7,16 +7,19 @@ async function criar(idUsuario, tokenHash) {
     );
 }
 
-async function buscarValida(tokenHash) {
-    const [recuperacoes] = await pool.query(
-        'SELECT * FROM recuperacao_senha WHERE token_hash = ? AND usado = FALSE AND expira_em > NOW()',
+async function invalidarDoUsuario(idUsuario, conexao = pool) {
+    await conexao.query(
+        'UPDATE recuperacao_senha SET usado = TRUE WHERE id_usuario = ? AND usado = FALSE',
+        [idUsuario]
+    );
+}
+
+async function buscarValidaParaUso(tokenHash, conexao) {
+    const [recuperacoes] = await conexao.query(
+        'SELECT * FROM recuperacao_senha WHERE token_hash = ? AND usado = FALSE AND expira_em > NOW() FOR UPDATE',
         [tokenHash]
     );
     return recuperacoes[0] ?? null;
 }
 
-async function marcarComoUsada(id) {
-    await pool.query('UPDATE recuperacao_senha SET usado = TRUE WHERE id = ?', [id]);
-}
-
-module.exports = { criar, buscarValida, marcarComoUsada };
+module.exports = { criar, invalidarDoUsuario, buscarValidaParaUso };

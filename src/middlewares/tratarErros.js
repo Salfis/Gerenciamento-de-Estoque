@@ -4,6 +4,7 @@ function RotaNaoEncontrada(req, res) {
     return res.status(404).json({ erro: 'Rota não encontrada' });
 }
 
+//Esse é um middleware pra tratamento de erros, feito pra retornar os valores de erro corretamente sem expor dados de usuários.
 function TratarErros(erro, req, res, next) {
     if (res.headersSent) {
         return next(erro);

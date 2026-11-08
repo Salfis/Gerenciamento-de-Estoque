@@ -46,6 +46,10 @@ services:
       PORT: ${PORT:-3000}
       JWT_SECRET: ${JWT_SECRET}
 
+      ADMIN_NOME: ${ADMIN_NOME:-Administrador}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_SENHA: ${ADMIN_SENHA}
+
       DB_HOST: mysql
       DB_PORT: 3306
       MYSQL_DATABASE: ${MYSQL_DATABASE}

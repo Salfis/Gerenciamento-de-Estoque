@@ -1,12 +1,12 @@
 const { validarToken } = require('../services/auth');
 const { ErroNaoAutenticado, ErroProibido } = require('../services/erros');
 
-function AutenticarUsuario(req, res, next) {
+async function AutenticarUsuario(req, res, next) {
     const [tipo, token] = (req.headers.authorization || '').split(' ');
     if (tipo !== 'Bearer' || !token) {
         throw new ErroNaoAutenticado('Token não informado');
     }
-    req.usuario = validarToken(token);
+    req.usuario = await validarToken(token);
     next();
 }
 
