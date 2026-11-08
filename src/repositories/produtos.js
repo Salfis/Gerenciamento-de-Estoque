@@ -1,7 +1,7 @@
 const { pool } = require('../database');
 
 const SELECT_PRODUTO = `
-    SELECT p.id_produto, p.sku, p.nome, p.marca, p.id_categoria, c.nome AS categoria,
+    SELECT p.id_produto, p.sku, p.codigo_barras, p.nome, p.marca, p.id_categoria, c.nome AS categoria,
            p.preco_venda, p.quantidade_estoque, p.quantidade_minima, p.data_criacao
     FROM produto p
     JOIN categoria c ON c.id_categoria = p.id_categoria`;
@@ -12,8 +12,8 @@ async function listar(filtros) {
 
     if (filtros.busca) {
         const termo = `%${filtros.busca}%`;
-        condicoes.push('(p.nome LIKE ? OR p.marca LIKE ? OR p.sku LIKE ?)');
-        valores.push(termo, termo, termo);
+        condicoes.push('(p.nome LIKE ? OR p.marca LIKE ? OR p.sku LIKE ? OR p.codigo_barras LIKE ?)');
+        valores.push(termo, termo, termo, termo);
     }
     if (filtros.id_categoria) {
         condicoes.push('p.id_categoria = ?');
@@ -52,6 +52,11 @@ async function buscarPorSku(sku) {
     return produtos[0] ?? null;
 }
 
+async function buscarPorCodigoBarras(codigoBarras) {
+    const [produtos] = await pool.query('SELECT id_produto, codigo_barras FROM produto WHERE codigo_barras = ?', [codigoBarras]);
+    return produtos[0] ?? null;
+}
+
 async function contarPorCategoria(idCategoria) {
     const [linhas] = await pool.query('SELECT COUNT(*) AS total FROM produto WHERE id_categoria = ?', [idCategoria]);
     return linhas[0].total;
@@ -59,8 +64,8 @@ async function contarPorCategoria(idCategoria) {
 
 async function criar(produto, conexao = pool) {
     const [resultado] = await conexao.query(
-        'INSERT INTO produto (sku, nome, marca, id_categoria, preco_venda, quantidade_estoque, quantidade_minima) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [produto.sku, produto.nome, produto.marca, produto.id_categoria, produto.preco_venda, produto.quantidade_estoque, produto.quantidade_minima]
+        'INSERT INTO produto (sku, codigo_barras, nome, marca, id_categoria, preco_venda, quantidade_estoque, quantidade_minima) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [produto.sku, produto.codigo_barras, produto.nome, produto.marca, produto.id_categoria, produto.preco_venda, produto.quantidade_estoque, produto.quantidade_minima]
     );
     return resultado.insertId;
 }
@@ -86,6 +91,7 @@ module.exports = {
     buscarPorId,
     buscarParaMovimentar,
     buscarPorSku,
+    buscarPorCodigoBarras,
     contarPorCategoria,
     criar,
     atualizar,
