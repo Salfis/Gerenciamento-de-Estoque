@@ -7,10 +7,12 @@ const validar = require('./validacao');
 
 const TIPOS = ['ENTRADA', 'SAIDA'];
 
+// O tipo precisa ser ENTRADA ou SAIDA. Na listagem ele é opcional.
 function validarTipo(tipo, obrigatorio = true) {
     if (tipo === undefined && !obrigatorio) {
         return null;
     }
+    //Validando se o tipo digitado existe na lista predefinida
     if (!TIPOS.includes(tipo)) {
         throw new ErroValidacao('O campo tipo deve ser ENTRADA ou SAIDA');
     }
@@ -23,16 +25,13 @@ async function registrar(dados = {}, idUsuario) {
     const quantidade = validar.inteiro(dados.quantidade, 'quantidade', { min: 1 });
     const observacao = validar.texto(dados.observacao, 'observacao', { obrigatorio: false, max: 255 });
 
-    // A leitura do produto usa SELECT ... FOR UPDATE dentro da transação, bloqueando a linha
-    // até o commit. Isso impede que duas saídas simultâneas leiam o mesmo saldo e deixem o estoque negativo.
+    //Impedir que o estoque fique negativo
     return transacao(async (conexao) => {
         const produto = await produtoRepository.buscarParaMovimentar(id_produto, conexao);
         if (!produto) {
             throw new ErroNaoEncontrado('Produto não encontrado');
         }
 
-        // Regra de negócio: uma saída nunca pode ser maior que o saldo atual.
-        // A resposta informa a quantidade máxima disponível para orientar o usuário.
         if (tipo === 'SAIDA' && quantidade > produto.quantidade_estoque) {
             throw new ErroConflito(
                 `Estoque insuficiente. A quantidade máxima disponível para saída é ${produto.quantidade_estoque}`,
@@ -54,6 +53,7 @@ async function registrar(dados = {}, idUsuario) {
     });
 }
 
+//Histórico geral com filtros opcionais de produto e tipo.
 async function listar(query = {}) {
     return movimentacaoRepository.listar({
         id_produto: query.id_produto === undefined ? null : validar.id(query.id_produto, 'id_produto'),
@@ -61,6 +61,7 @@ async function listar(query = {}) {
     });
 }
 
+//Histórico de um produto; 404 se o produto não existir.
 async function listarPorProduto(idProduto) {
     const produto = await buscarProduto(idProduto);
     return movimentacaoRepository.listar({ id_produto: produto.id_produto });

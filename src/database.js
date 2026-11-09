@@ -11,10 +11,7 @@ const pool = mysql.createPool({
     decimalNumbers: true,
 });
 
-/**
- * Executa a função recebida dentro de uma transação. Se qualquer etapa falhar,
- * todas as alterações são desfeitas (rollback), mantendo o banco consistente.
- */
+
 async function transacao(funcao) {
     const conexao = await pool.getConnection();
     try {

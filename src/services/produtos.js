@@ -8,10 +8,6 @@ const validar = require('./validacao');
 
 const CAMPOS_EDITAVEIS = ['sku', 'codigo_barras', 'nome', 'marca', 'id_categoria', 'preco_venda', 'quantidade_minima'];
 
-/**
- * A disponibilidade e o alerta de estoque baixo não são armazenados no banco:
- * são calculados a partir da quantidade atual, evitando informações duplicadas ou desatualizadas.
- */
 function comSituacao(produto) {
     return {
         ...produto,
@@ -95,8 +91,6 @@ async function criar(dados = {}, idUsuario) {
     await garantirSkuDisponivel(produto.sku);
     await garantirCodigoBarrasDisponivel(produto.codigo_barras);
 
-    // O cadastro do produto e o registro do estoque inicial ocorrem na mesma transação,
-    // garantindo que toda quantidade em estoque possua uma movimentação correspondente.
     const idProduto = await transacao(async (conexao) => {
         const id = await produtoRepository.criar(produto, conexao);
         if (produto.quantidade_estoque > 0) {
@@ -160,11 +154,6 @@ async function consultarCodigoBarras(codigo) {
     return { ...externo, ja_cadastrado: Boolean(local), id_produto: local?.id_produto ?? null };
 }
 
-/**
- * Cadastra um produto a partir do código de barras: nome e marca são obtidos da Open Food Facts
- * e podem ser sobrescritos pelos campos enviados. Se o SKU não for informado, o próprio código
- * de barras é utilizado. As demais regras do cadastro manual continuam valendo.
- */
 async function importar(dados = {}, idUsuario) {
     const codigoBarras = validar.codigoBarras(dados.codigo_barras);
     await garantirCodigoBarrasDisponivel(codigoBarras);

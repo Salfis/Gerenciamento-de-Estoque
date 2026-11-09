@@ -7,6 +7,7 @@ async function listar() {
     return categoriaRepository.listar();
 }
 
+//Busca por id e devolve a categoria, ou lança 404.
 async function buscarExistente(idCategoria) {
     const id = validar.id(idCategoria);
     const categoria = await categoriaRepository.buscarPorId(id);
@@ -16,6 +17,7 @@ async function buscarExistente(idCategoria) {
     return categoria;
 }
 
+// Verifica se tem nome disponível ou não.
 async function garantirNomeDisponivel(nome, idAtual = null) {
     const existente = await categoriaRepository.buscarPorNome(nome);
     if (existente && existente.id_categoria !== idAtual) {
@@ -23,6 +25,7 @@ async function garantirNomeDisponivel(nome, idAtual = null) {
     }
 }
 
+//Se o nome estiver disponível, vai e cria a categoria.
 async function criar(dados = {}) {
     const nome = validar.texto(dados.nome, 'nome');
     await garantirNomeDisponivel(nome);
@@ -30,6 +33,7 @@ async function criar(dados = {}) {
     return { id_categoria, nome };
 }
 
+// Pra atualizar a categoria. Antes ela confirma se a categoria existe.
 async function atualizar(idCategoria, dados = {}) {
     const categoria = await buscarExistente(idCategoria);
     const nome = validar.texto(dados.nome, 'nome');
@@ -38,6 +42,7 @@ async function atualizar(idCategoria, dados = {}) {
     return { id_categoria: categoria.id_categoria, nome };
 }
 
+// Categoria com produtos não pode ser excluída, então esse service vai verificar isso e retornar 409 caso tenha produtos.
 async function excluir(idCategoria) {
     const categoria = await buscarExistente(idCategoria);
     if (await produtoRepository.contarPorCategoria(categoria.id_categoria) > 0) {
@@ -46,6 +51,7 @@ async function excluir(idCategoria) {
     await categoriaRepository.excluir(categoria.id_categoria);
 }
 
+//Não achei jeito melhor de fazer aí isso aí é utilizado lá pelo /categorias/:id
 async function buscar(idCategoria) {
     return buscarExistente(idCategoria);
 }

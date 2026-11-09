@@ -3,11 +3,6 @@ const { ErroServicoExterno } = require('./erros');
 const URL_BASE = process.env.OPEN_FOOD_FACTS_URL || 'https://world.openfoodfacts.org';
 const CAMPOS = 'product_name,product_name_pt,brands,image_front_url';
 
-/**
- * Consulta a base pública da Open Food Facts pelo código de barras (EAN/GTIN).
- * Retorna os dados normalizados para o formato do sistema, ou null quando o produto
- * não existe na base. Falhas de rede ou indisponibilidade do serviço geram erro 503.
- */
 async function buscarProdutoPorCodigo(codigoBarras) {
     let resposta;
     try {
