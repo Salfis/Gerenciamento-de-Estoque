@@ -40,10 +40,6 @@ async function garantirEmailDisponivel(email, idAtual = null) {
     }
 }
 
-/**
- * Impede que o último administrador ativo seja rebaixado ou desativado,
- * evitando que o sistema fique sem ninguém capaz de executar operações administrativas.
- */
 async function garantirOutroAdminAtivo(usuario) {
     if (usuario.perfil === 'ADMIN' && usuario.ativo && await usuarioRepository.contarAdminsAtivos() <= 1) {
         throw new ErroConflito('O sistema precisa de pelo menos um administrador ativo');
@@ -108,7 +104,7 @@ async function atualizar(idUsuario, dados = {}) {
 
 /**
  * A exclusão de usuários é lógica: a conta é desativada e perde o acesso imediatamente,
- * mas o registro é mantido para preservar a autoria das movimentações de estoque.
+ * mas o registro é mantido para preservar a autoria das movimentações de estoque, se não pode haver confusão.
  */
 async function desativar(idUsuario) {
     const usuario = await buscarExistente(idUsuario);

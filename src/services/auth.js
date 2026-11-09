@@ -8,10 +8,6 @@ const { enviarEmail } = require('./email');
 const { ErroNaoAutenticado, ErroValidacao } = require('./erros');
 const validar = require('./validacao');
 
-/**
- * Hash utilizado quando o e-mail informado não existe, para que o login sempre execute
- * a comparação do bcrypt e o tempo de resposta não revele quais e-mails estão cadastrados.
- */
 const HASH_SENHA_INEXISTENTE = bcrypt.hashSync('usuario-inexistente', 10);
 
 function gerarHash(token) {
@@ -37,11 +33,6 @@ async function login(dados = {}) {
     return { id_usuario: usuario.id_usuario, nome: usuario.nome, email: usuario.email, perfil: usuario.perfil, token };
 }
 
-/**
- * Além de validar a assinatura do JWT, consulta o usuário no banco a cada requisição.
- * Assim, contas desativadas, perfis alterados e senhas trocadas passam a valer imediatamente,
- * sem depender da expiração do token.
- */
 async function validarToken(token) {
     let dados;
     try {

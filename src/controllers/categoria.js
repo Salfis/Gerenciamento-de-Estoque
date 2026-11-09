@@ -1,10 +1,12 @@
 const categoriaService = require('../services/categoria');
 
+//retorna a lista de categorias
 async function ListarCategorias(req, res) {
     const categorias = await categoriaService.listar();
     return res.status(200).json(categorias);
 }
 
+//Busca a categoria com o ID, se ela não existir, 404
 async function BuscarCategoria(req, res) {
     const categoria = await categoriaService.buscar(req.params.id);
     return res.status(200).json(categoria);

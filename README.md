@@ -21,9 +21,7 @@ API REST para controlar o estoque de um negócio: cadastro de produtos e categor
 
 ## 1. Sobre o sistema
 
-Muitos negócios pequenos ainda controlam o estoque no papel ou em planilhas, o que gera erros de contagem e não registra quem retirou ou repôs cada item. Este sistema mantém o cadastro dos produtos e a quantidade disponível de cada um, e registra cada entrada e saída com data e responsável.
-
-**Público-alvo:** donos de negócios e equipes que precisam acompanhar produtos para venda ou uso interno.
+**Público-alvo:** donos de negócios e equipes que precisam acompanhar estoque de produtos.
 
 **Escopo:**
 - cadastro de categorias e produtos (com pesquisa e filtros);
@@ -38,8 +36,8 @@ Muitos negócios pequenos ainda controlam o estoque no papel ou em planilhas, o 
 |---|---|
 | **Usuário** | Pessoa que acessa o sistema. Perfil `ADMIN` ou `OPERADOR`. É o responsável por cada movimentação. |
 | **Categoria** | Agrupa produtos (ex.: Bebidas, Limpeza). |
-| **Produto** | Item controlado no estoque, identificado por um SKU único e, opcionalmente, pelo código de barras. |
-| **Movimentação de estoque** | Entrada ou saída de um produto, com quantidade, data, observação e o usuário que a registrou. |
+| **Produto** | Item controlado no estoque, identificado por um SKU único e, opcionalmente, pelo código de barras( com a API obrigatória adicionada). |
+| **Movimentação de estoque** | Entrada ou saída de um produto, com quantidade, data, observação e o usuário que a registrou. Funciona primariamente como um 'log' para ser consultado.
 
 A tabela `recuperacao_senha` é auxiliar: guarda o hash dos códigos de recuperação de senha e não é uma entidade de negócio.
 
@@ -167,27 +165,23 @@ src/
 └── database.js      pool de conexões do MySQL e função de transação
 ```
 
-- **Controllers** não têm regra de negócio nem SQL; ficam com 2 ou 3 linhas por função.
-- **Services** não conhecem `req`/`res` nem escrevem SQL. Sinalizam falhas lançando erros da aplicação (`ErroValidacao` 400, `ErroNaoAutenticado` 401, `ErroProibido` 403, `ErroNaoEncontrado` 404, `ErroConflito` 409, `ErroServicoExterno` 503).
-- **Repositories** concentram o acesso ao MySQL. Trocar o banco afeta só essa camada.
-- **Middleware global de erros** (`middlewares/tratarErros.js`) converte qualquer erro na resposta padrão `{ "erro": "..." }`. Erros inesperados retornam 500 com mensagem genérica e são registrados só no log do servidor.
 
-**Segurança aplicada:** senhas com bcrypt; JWT HS256 com expiração de 8h; usuário revalidado no banco a cada requisição (desativação e troca de perfil valem na hora); invalidação de tokens após troca de senha; limite de tentativas em `/login` e na recuperação de senha; login com tempo constante (não revela e-mails cadastrados); headers de segurança com `helmet`; MySQL sem porta exposta no host; container da API sem root.
+**Segurança:** senhas com bcrypt; JWT com expiração de 8h; usuário revalidado no banco a cada requisição (desativação e troca de perfil valem na hora); invalidação de tokens depois de trocar senha; limite de tentativas em `/login` e na recuperação de senha; headers de segurança com `helmet`; MySQL sem porta exposta no host; container da API sem root.
 
-## 6. Integração externa: Open Food Facts
+## 6. Integração externa Obrigatória: Open Food Facts
 
-**Serviço:** [Open Food Facts](https://world.openfoodfacts.org), base pública e colaborativa de produtos identificados pelo código de barras (EAN/GTIN), com boa cobertura de alimentos, bebidas, higiene e limpeza vendidos no Brasil.
+**Serviço:** [Open Food Facts](https://world.openfoodfacts.org), é uma base pública e colaborativa de produtos identificados pelo código de barras (EAN/GTIN), cobre muito sobre produtos alimentos, bebidas, higiene e limpeza vendidos no Brasil.
 
-**Finalidade no sistema:** agilizar e padronizar o cadastro de produtos. Em vez de digitar nome e marca, o administrador informa o código de barras da embalagem e a API preenche esses dados. Isso reduz erros de digitação e cadastros duplicados, já que o código de barras também passa a ser único no sistema.
+**Finalidade no sistema:** deixar mais rápido e padronizar o cadastro de produtos. Em vez de digitar nome e marca, o administrador informa o código de barras da embalagem e a API preenche esses dados. Isso reduz erros de digitação e cadastros duplicados, já que o código de barras também passa a ser único no sistema.
 
 | Endpoint | O que faz |
 |---|---|
-| `GET /produtos/codigo-barras/:codigo` | Consulta o código na Open Food Facts e mostra nome, marca, imagem e se o produto já está cadastrado no estoque. |
+| `GET /produtos/codigo-barras/:codigo` | Consulta o código na Open Food Facts e mostra nome, marca, imagem e se o produto já está no estoque. |
 | `POST /produtos/importar` | Cadastra o produto com nome e marca vindos da Open Food Facts. Os demais campos seguem as regras do cadastro manual. |
 
-**Configuração:** nenhuma. A API é gratuita e não exige chave. O serviço é acessado em `https://world.openfoodfacts.org` (variável opcional `OPEN_FOOD_FACTS_URL`).
+**Configuração:** Ela é gratuita e não precisa de chave. O serviço é acessado em `https://world.openfoodfacts.org` (variável opcional `OPEN_FOOD_FACTS_URL`) a fácil aplicação foi um dos principais motivos da escolha.
 
-**Como verificar:** use os códigos `7894900011517` (Refrigerante Coca-Cola 2L) ou `7891000100103` (Leite Condensado Moça). O código `7896004000855` não existe na base e retorna 404. Se a Open Food Facts estiver fora do ar, a API responde 503 e o cadastro manual continua funcionando.
+**Verificando:** use os códigos `7894900011517` (Refrigerante Coca-Cola 2L) ou `7891000100103` (Leite Condensado Moça). O código `7896004000855` não existe na base e retorna 404. Se estiver fora do ar a resposta é `503`.
 
 ## 7. Como executar
 
