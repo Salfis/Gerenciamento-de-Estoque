@@ -11,7 +11,7 @@ API REST para controlar o estoque de um negócio: cadastro de produtos e categor
 3. [Regras de negócio](#3-regras-de-negócio)
 4. [Perfis e permissões](#4-perfis-e-permissões)
 5. [Arquitetura](#5-arquitetura)
-6. [Integração externa: Open Food Facts](#6-integração-externa-open-food-facts)
+6. [Integração externa Obrigatória: Open Food Facts](#6-integração-externa-obrigatória-open-food-facts)
 7. [Como executar](#7-como-executar)
 8. [Collection do Postman](#8-collection-do-postman)
 9. [Endpoints](#9-endpoints)
@@ -36,8 +36,8 @@ API REST para controlar o estoque de um negócio: cadastro de produtos e categor
 |---|---|
 | **Usuário** | Pessoa que acessa o sistema. Perfil `ADMIN` ou `OPERADOR`. É o responsável por cada movimentação. |
 | **Categoria** | Agrupa produtos (ex.: Bebidas, Limpeza). |
-| **Produto** | Item controlado no estoque, identificado por um SKU único e, opcionalmente, pelo código de barras( com a API obrigatória adicionada). |
-| **Movimentação de estoque** | Entrada ou saída de um produto, com quantidade, data, observação e o usuário que a registrou. Funciona primariamente como um 'log' para ser consultado.
+| **Produto** | Item controlado no estoque, identificado por um SKU único e, opcionalmente, pelo código de barras (com a API obrigatória adicionada). |
+| **Movimentação de estoque** | Entrada ou saída de um produto, com quantidade, data, observação e o usuário que a registrou. Funciona primariamente como um 'log' para ser consultado. |
 
 A tabela `recuperacao_senha` é auxiliar: guarda o hash dos códigos de recuperação de senha e não é uma entidade de negócio.
 
@@ -170,7 +170,7 @@ src/
 
 ## 6. Integração externa Obrigatória: Open Food Facts
 
-**Serviço:** [Open Food Facts](https://world.openfoodfacts.org), é uma base pública e colaborativa de produtos identificados pelo código de barras (EAN/GTIN), cobre muito sobre produtos alimentos, bebidas, higiene e limpeza vendidos no Brasil.
+**Serviço:** [Open Food Facts](https://world.openfoodfacts.org), é uma base pública e colaborativa de produtos identificados pelo código de barras (EAN/GTIN), cobre muitos produtos de alimentos, bebidas, higiene e limpeza vendidos no Brasil.
 
 **Finalidade no sistema:** deixar mais rápido e padronizar o cadastro de produtos. Em vez de digitar nome e marca, o administrador informa o código de barras da embalagem e a API preenche esses dados. Isso reduz erros de digitação e cadastros duplicados, já que o código de barras também passa a ser único no sistema.
 
@@ -179,7 +179,7 @@ src/
 | `GET /produtos/codigo-barras/:codigo` | Consulta o código na Open Food Facts e mostra nome, marca, imagem e se o produto já está no estoque. |
 | `POST /produtos/importar` | Cadastra o produto com nome e marca vindos da Open Food Facts. Os demais campos seguem as regras do cadastro manual. |
 
-**Configuração:** Ela é gratuita e não precisa de chave. O serviço é acessado em `https://world.openfoodfacts.org` (variável opcional `OPEN_FOOD_FACTS_URL`) a fácil aplicação foi um dos principais motivos da escolha.
+**Configuração:** Ela é gratuita e não precisa de chave. O serviço é acessado em `https://world.openfoodfacts.org` (variável opcional `OPEN_FOOD_FACTS_URL`). A fácil aplicação foi um dos principais motivos da escolha.
 
 **Verificando:** use os códigos `7894900011517` (Refrigerante Coca-Cola 2L) ou `7891000100103` (Leite Condensado Moça). O código `7896004000855` não existe na base e retorna 404. Se estiver fora do ar a resposta é `503`.
 
